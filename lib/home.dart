@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'package:connectivity/connectivity.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dio_retry/interceptor/helper_retry_dio.dart';
+import 'package:flutter_dio_retry/interceptor/retry_dio.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -54,6 +58,15 @@ class _MyHomePageState extends State<MyHomePage> {
     dio = Dio();
     firstPostTitle = "press the button!";
     isLoading = false;
+
+    dio.interceptors.add(
+      RetryConnection(
+        requestRetrier: DioConnectivityRequestRetrier(
+          dio: Dio(),
+          connectivity: Connectivity(),
+        ),
+      ),
+    );
     super.initState();
   }
 
@@ -63,17 +76,27 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     var response;
 
-    try{
-
-      response =
-      await dio.get('https://jsonplaceholder.typicode.com/posts');
-
-    }catch(e){
-      print('-----Error----');
+    try {
+      response = await dio.get('https://jsonplaceholder.typicode.com/posts');
+    } catch (e) {
+      if (e.type == DioErrorType.DEFAULT) {
+        setState(() {
+          firstPostTitle = "${e.error}";
+          isLoading = false;
+        });
+      }
+      if (e.type == DioErrorType.CANCEL) {
+        setState(() {
+          firstPostTitle = e.type as String;
+          isLoading = false;
+        });
+      }
     }
-    setState(() {
-      firstPostTitle = response.data[0]['title'] as String;
-      isLoading = false;
-    });
+    if (isLoading) {
+      setState(() {
+        firstPostTitle = response.data[0]['title'] as String;
+        isLoading = false;
+      });
+    }
   }
 }

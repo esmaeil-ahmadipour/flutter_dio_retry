@@ -67,6 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       response =
       await dio.get('https://jsonplaceholder.typicode.com/posts');
+
     }catch(e){
       print('-----Error----');
     }

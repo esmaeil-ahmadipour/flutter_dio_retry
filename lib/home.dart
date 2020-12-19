@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -10,6 +11,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool isLoading;
+  Dio dio;
+  String firstPostTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -17,17 +20,22 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _loadedData(),
-            RaisedButton(
-              onPressed: () {},
-              child: Text("Get Data"),
-            )
-          ],
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _loadedData(),
+              RaisedButton(
+                onPressed: () {
+                  _getData();
+                },
+                child: Text("Get Data"),
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -37,7 +45,34 @@ class _MyHomePageState extends State<MyHomePage> {
     if (isLoading) {
       return CircularProgressIndicator();
     } else {
-      return Text("Load Data");
+      return Text("$firstPostTitle");
     }
+  }
+
+  @override
+  void initState() {
+    dio = Dio();
+    firstPostTitle = "press the button!";
+    isLoading = false;
+    super.initState();
+  }
+
+  _getData() async {
+    setState(() {
+      isLoading = true;
+    });
+    var response;
+
+    try{
+
+      response =
+      await dio.get('https://jsonplaceholder.typicode.com/posts');
+    }catch(e){
+      print('-----Error----');
+    }
+    setState(() {
+      firstPostTitle = response.data[0]['title'] as String;
+      isLoading = false;
+    });
   }
 }
